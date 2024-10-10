@@ -16,8 +16,11 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
-    return true;
+    if (cmd == NULL)
+    	return false;
+    int ret = system(cmd);
+    
+    return (ret == 0);
 }
 
 /**
@@ -40,6 +43,8 @@ bool do_exec(int count, ...)
     va_start(args, count);
     char * command[count+1];
     int i;
+    pid_t child_pid;
+    int status = 0;
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
@@ -58,10 +63,42 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    
+    fflush(stdout);
+    child_pid = fork();
+    if (child_pid < 0) {
+        printf("*****fork failure %s\n", command[0]);
+        va_end(args);
+    	return false;
+    }
+    else if (child_pid == 0) {
+        int ret = execv(command[0], command);
+        printf("*****execv ret is %d cmd %s*\n", ret,command[0]);
+        _exit(EXIT_FAILURE);
+    }
+    else {
+        int wr = waitpid(child_pid, &status, 0);
+        if (wr == -1) {
+        	va_end(args);
+        	return false;
+        }
+        printf("waitpid ret %d\n", wr);
+        printf("exited %d, sig %d, stop %d cont %d\n", WEXITSTATUS(status), WIFSIGNALED(status), WIFSTOPPED(status), WIFCONTINUED(status));
+    	if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
+    		printf("***Parent return true cmd %s status = %d\n", command[0], WEXITSTATUS(status));
+    		va_end(args);
+    		return true;
+    	}
+    	else {
+   		printf("***Parent return false cmd %s status = %d\n", command[0], status);
+   		va_end(args);
+    		return false;
+    	}
+    }
+     
+    
 
-    va_end(args);
-
-    return true;
+    //return true;
 }
 
 /**
@@ -74,7 +111,7 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
     va_list args;
     va_start(args, count);
     char * command[count+1];
-    int i;
+    int i, fd = 0;
     for(i=0; i<count; i++)
     {
         command[i] = va_arg(args, char *);
@@ -92,8 +129,43 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int status = 0;
+    if (outputfile == NULL)
+    	return false;
+    int childPid = fork();
+    if(childPid < 0) {
+    	va_end(args);
+    	return false;
+    }
 
-    va_end(args);
+    switch(childPid) {
+        //child process
+    case 0: 
+    	fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+    	if (fd == -1) {
+		perror("stdout fd failure");
+		_exit(EXIT_FAILURE);
+	}
 
-    return true;
+	if (dup2(fd, 1) < 0) {
+		perror("stdout fd failure");
+		close(fd);
+		_exit(EXIT_FAILURE);
+	}
+	close(fd);
+	execv(command[0], command);
+	_exit(EXIT_FAILURE);
+     default:
+     	if (waitpid(-1, &status, 0) == -1) {
+     		perror("waitpid error");
+		_exit(EXIT_FAILURE);
+     	}
+     	va_end(args);
+	close(fd);
+     	if (WIFEXITED(status) && WEXITSTATUS(status) == 0)
+     		return true;
+     	else
+     		return false;    	
+    }
+
 }
