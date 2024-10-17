@@ -102,7 +102,6 @@ sudo mknod -m 600 dev/console c 5 1
 
 # TODO: Clean and build the writer utility
 cd ${SPATH}
-make clean
 make CROSS_COMPILE=${CROSS_COMPILE}
 mkdir -p ${OUTDIR}/rootfs/home/conf
 cp writer "${OUTDIR}/rootfs/usr/bin/."
