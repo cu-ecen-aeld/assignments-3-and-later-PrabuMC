@@ -1,7 +1,7 @@
 CROSS_COMPILE=aarch64-none-linux-gnu-
 all: writer.o
-	gcc -o writer writer.c
+	gcc -I CROSS_COMPILE=aarch64-none-linux-gnu- -o writer writer.c
 default: writer.o
-	gcc -o writer writer.c
+	gcc -I CROSS_COMPILE=aarch64-none-linux-gnu- -o writer writer.c
 clean:
 	rm writer writer.o
