@@ -1,0 +1,1 @@
+num files in /tmp/aeld-data are 10 search count for AELD_IS_FUN is 10 The number of files are 10 and the number of matching lines are 10
