@@ -105,7 +105,7 @@ cd ${SPATH}
 make CROSS_COMPILE=${CROSS_COMPILE}
 mkdir -p ${OUTDIR}/rootfs/home/conf
 cp writer "${OUTDIR}/rootfs/usr/bin/."
-cp finder.sh "${OUTDIR}/rootfs/home/."
+cp finder.sh "${OUTDIR}/rootfs/usr/bin/."
 cp finder-test.sh "${OUTDIR}/rootfs/home/."
 cp conf/* ${OUTDIR}/rootfs/home/conf/.
 cp autorun-qemu.sh ${OUTDIR}/rootfs/home/
